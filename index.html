@@ -1,41 +1,220 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PLAN DE PRODUCTION - IMAGES</title>
-<link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Firebase</title>
+<style>
+body { background:#1e1e2f; color:white; font-family:system-ui, sans-serif; margin:0; padding:20px; }
+h1 { margin-bottom:20px; }
+.board { display:flex; flex-direction:column; gap:30px; }
+.theme-title { font-size:18px; font-weight:bold; margin-bottom:10px; cursor:pointer; text-transform: uppercase; }
+.theme-columns { display:flex; gap:20px; }
+.column { flex:1; min-height:150px; border-radius:10px; padding:10px; }
+.column-a-faire { background:#a84848; color:white; }
+.column-en-cours { background:#a17a40; color:white; }
+.column-termine { background:#317548; color:white; }
+.column h2 { text-align:center; font-size:16px; margin:0 0 10px; text-transform: uppercase; }
+button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
+.task { padding:12px; border-radius:10px; margin-bottom:10px; background:#2c2c40; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: transform .12s; position: relative; cursor:pointer; }
+.task:hover { transform: translateY(-2px); }
+.task-header { font-weight:600; font-size:14px; margin-bottom:6px; text-transform: uppercase; }
+.task-info { font-size:12px; color:#ccc; margin-bottom:6px; }
+.badge { display:inline-block; padding:2px 6px; border-radius:5px; font-size:11px; font-weight:700; margin-right:6px; color:black; text-transform: uppercase; }
+.badge-haute { background:#ef4444; }
+.badge-moyenne { background:#facc15; color:black; }
+.badge-basse { background:#22c55e; color:black; }
+.task-dates { font-size:11px; color:#aaa; margin-top:4px; }
+.delete-task { position:absolute; top:8px; right:8px; font-size:14px; color:#ef4444; cursor:pointer; user-select:none; }
+#modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background:#2c2c40; padding:18px; border-radius:12px; min-width:320px; max-width:480px; }
+.field { margin-bottom:10px; }
+.field label { display:block; margin-bottom:6px; font-size:14px; color:#ddd; }
+.field input, .field select { width:100%; padding:8px; border-radius:8px; border:1px solid #555; background:#1e1e2f; color:white; box-sizing:border-box; }
+.modal-actions { text-align:right; margin-top:8px; display:flex; gap:8px; justify-content:flex-end; }
+</style>
 </head>
 <body>
-  <h1>PLAN DE PRODUCTION - IMAGES</h1>
+<h1>KANBAN FIREBASE</h1>
+<div id="board" class="board"></div>
+<div style="margin-top:12px;"><button id="addThemeBtn">+ TYPE DE PROJET</button></div>
 
-  <div id="board" class="board"></div>
-  <div style="margin-top:12px;">
-    <button id="addThemeBtn">+ TYPE DE PROJET</button>
-  </div>
-
-  <!-- Modal -->
-  <div id="modal" aria-hidden="true">
-    <div class="modal-content" role="dialog" aria-modal="true">
-      <h3 id="modalTitle">ÉDITER PROJET</h3>
-      <div class="field"><label>Titre</label><input id="m-title" type="text" /></div>
-      <div class="field"><label>Date début</label><input id="m-start" type="date" /></div>
-      <div class="field"><label>Date fin</label><input id="m-end" type="date" /></div>
-      <div class="field"><label>Personne(s) sur le projet</label><input id="m-team" type="text" /></div>
-      <div class="field"><label>Priorité</label>
-        <select id="m-priority">
-          <option>Haute</option>
-          <option>Moyenne</option>
-          <option>Basse</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button id="modalCancel" class="ghost">Annuler</button>
-        <button id="modalSave">Enregistrer</button>
-      </div>
+<!-- Modal -->
+<div id="modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true">
+    <h3 id="modalTitle">ÉDITER PROJET</h3>
+    <div class="field"><label>TITRE</label><input id="m-title" type="text"></div>
+    <div class="field"><label>DATE DÉBUT</label><input id="m-start" type="date"></div>
+    <div class="field"><label>DATE FIN</label><input id="m-end" type="date"></div>
+    <div class="field"><label>PERSONNE(S) SUR LE PROJET</label><input id="m-team" type="text"></div>
+    <div class="field"><label>PRIORITÉ</label>
+      <select id="m-priority">
+        <option>Haute</option>
+        <option>Moyenne</option>
+        <option>Basse</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button id="modalCancel" class="ghost">ANNULER</button>
+      <button id="modalSave">ENREGISTRER</button>
     </div>
   </div>
+</div>
 
-<script type="module" src="script.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } 
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+// Config Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyByYuQSuqdmcUCG9ayEu3knUAn0g-0eTOU",
+  authDomain: "poleimages-b5574.firebaseapp.com",
+  projectId: "poleimages-b5574",
+  storageBucket: "poleimages-b5574.firebasestorage.app",
+  messagingSenderId: "864866327007",
+  appId: "1:864866327007:web:5b7432c5e9464cab42cc6a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const boardEl = document.getElementById("board");
+const addThemeBtn = document.getElementById("addThemeBtn");
+const modal = document.getElementById("modal");
+const mTitle = document.getElementById("m-title");
+const mStart = document.getElementById("m-start");
+const mEnd = document.getElementById("m-end");
+const mTeam = document.getElementById("m-team");
+const mPriority = document.getElementById("m-priority");
+
+let currentEdit = null;
+
+// Ajouter un type de projet
+addThemeBtn.addEventListener("click", async () => {
+  await addDoc(collection(db, "kanban"), {
+    title: "NOUVEAU TYPE DE PROJET",
+    "À faire": [],
+    "En cours": [],
+    "Terminé": []
+  });
+  loadBoard();
+});
+
+// Charger tous les projets
+async function loadBoard() {
+  boardEl.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "kanban"));
+  snapshot.forEach(docSnap => {
+    const theme = docSnap.data();
+    const themeId = docSnap.id;
+
+    const themeEl = document.createElement("div");
+    themeEl.className = "theme";
+    const titleEl = document.createElement("div");
+    titleEl.className = "theme-title";
+    titleEl.textContent = theme.title.toUpperCase();
+    titleEl.addEventListener("click", async () => {
+      const newTitle = prompt("Nouveau nom du type de projet :", theme.title);
+      if(newTitle) {
+        await updateDoc(doc(db,"kanban",themeId), { title: newTitle });
+        loadBoard();
+      }
+    });
+    themeEl.appendChild(titleEl);
+
+    const cols = document.createElement("div");
+    cols.className = "theme-columns";
+
+    ["À faire","En cours","Terminé"].forEach(status=>{
+      const colEl = document.createElement("div");
+      colEl.className = "column";
+      if(status==="À faire") colEl.classList.add("column-a-faire");
+      else if(status==="En cours") colEl.classList.add("column-en-cours");
+      else colEl.classList.add("column-termine");
+
+      colEl.innerHTML = `<h2>${status.toUpperCase()}</h2>`;
+
+      (theme[status] || []).forEach((task,i)=>{
+        const t = document.createElement("div");
+        t.className = "task";
+        t.innerHTML = `
+          <span class="delete-task" title="Supprimer tâche">✖</span>
+          <div class="task-header">${task.title.toUpperCase()}</div>
+          <div class="task-info">Équipe: ${task.team || "-"}</div>
+          <div class="task-info"><span class="badge badge-${(task.priority||"Moyenne").toLowerCase()}">${task.priority||"Moyenne"}</span></div>
+          <div class="task-dates">${task.start ? "Début: "+task.start:""} ${task.end?"| Fin: "+task.end:""}</div>
+        `;
+        t.querySelector(".delete-task").addEventListener("click", async e=>{
+          e.stopPropagation();
+          if(confirm("Supprimer ce projet ?")) {
+            const updated = {...theme};
+            updated[status].splice(i,1);
+            await updateDoc(doc(db,"kanban",themeId), updated);
+            loadBoard();
+          }
+        });
+        t.addEventListener("click", ()=>{
+          currentEdit = { themeId, status, index:i, task };
+          mTitle.value = task.title;
+          mStart.value = task.start;
+          mEnd.value = task.end;
+          mTeam.value = task.team;
+          mPriority.value = task.priority;
+          modal.style.display="flex";
+        });
+        colEl.appendChild(t);
+      });
+
+      const addBtn = document.createElement("button");
+      addBtn.className="ghost";
+      addBtn.textContent="+ PROJET";
+      addBtn.addEventListener("click", async ()=>{
+        const updated = {...theme};
+        updated[status].push({title:"NOUVEAU PROJET", start:"", end:"", team:"", priority:"Moyenne"});
+        await updateDoc(doc(db,"kanban",themeId), updated);
+        loadBoard();
+      });
+      colEl.appendChild(addBtn);
+
+      cols.appendChild(colEl);
+    });
+
+    themeEl.appendChild(cols);
+    boardEl.appendChild(themeEl);
+  });
+}
+
+// Modal actions
+document.getElementById("modalSave").addEventListener("click", async ()=>{
+  if(!currentEdit) return closeModal();
+  const { themeId, status, index } = currentEdit;
+  const task = {
+    title: mTitle.value,
+    start: mStart.value,
+    end: mEnd.value,
+    team: mTeam.value,
+    priority: mPriority.value
+  };
+  const snapshot = await getDocs(collection(db,"kanban"));
+  snapshot.forEach(async docSnap=>{
+    if(docSnap.id===themeId){
+      const updated = {...docSnap.data()};
+      updated[status][index] = task;
+      await updateDoc(doc(db,"kanban",themeId), updated);
+    }
+  });
+  closeModal();
+  loadBoard();
+});
+
+document.getElementById("modalCancel").addEventListener("click", closeModal);
+modal.addEventListener("click", e=>{if(e.target===modal) closeModal();});
+
+function closeModal(){ modal.style.display="none"; currentEdit=null; }
+
+// Initial load
+loadBoard();
+</script>
 </body>
 </html>
