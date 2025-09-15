@@ -2,38 +2,39 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Firebase Drag & Drop</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PLAN DE PRODUCTION - IMAGES</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>KANBAN FIREBASE</h1>
-<div id="board" class="board"></div>
-<div style="margin-top:12px;">
-  <button id="addThemeBtn">+ TYPE DE PROJET</button>
-</div>
+  <h1>PLAN DE PRODUCTION - IMAGES</h1>
 
-<!-- Modal -->
-<div id="modal" aria-hidden="true">
-  <div class="modal-content" role="dialog" aria-modal="true">
-    <h3 id="modalTitle">ÉDITER PROJET</h3>
-    <div class="field"><label>TITRE</label><input id="m-title" type="text"></div>
-    <div class="field"><label>DATE DÉBUT</label><input id="m-start" type="date"></div>
-    <div class="field"><label>DATE FIN</label><input id="m-end" type="date"></div>
-    <div class="field"><label>PERSONNE(S) SUR LE PROJET</label><input id="m-team" type="text"></div>
-    <div class="field"><label>PRIORITÉ</label>
-      <select id="m-priority">
-        <option>Haute</option>
-        <option>Moyenne</option>
-        <option>Basse</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button id="modalCancel" class="ghost">ANNULER</button>
-      <button id="modalSave">ENREGISTRER</button>
+  <div id="board" class="board"></div>
+  <div style="margin-top:12px;">
+    <button id="addThemeBtn">+ TYPE DE PROJET</button>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">ÉDITER PROJET</h3>
+      <div class="field"><label>TITRE</label><input id="m-title" type="text" /></div>
+      <div class="field"><label>DATE DÉBUT</label><input id="m-start" type="date" /></div>
+      <div class="field"><label>DATE FIN</label><input id="m-end" type="date" /></div>
+      <div class="field"><label>ÉQUIPE</label><input id="m-team" type="text" /></div>
+      <div class="field"><label>PRIORITÉ</label>
+        <select id="m-priority">
+          <option>HAUTE</option>
+          <option>MOYENNE</option>
+          <option>BASSE</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="ghost">ANNULER</button>
+        <button id="modalSave">ENREGISTRER</button>
+      </div>
     </div>
   </div>
-</div>
 
 <script type="module" src="script.js"></script>
 </body>
