@@ -61,17 +61,23 @@ function render(){
       colEl.appendChild(addBtn);
       cols.appendChild(colEl);
       new Sortable(colEl, {
-  group: 'tasks',
+  group: "tasks",
   animation: 150,
-  onEnd: evt => {
-    const fromStatus = evt.from.querySelector('h2').textContent;
-    const toStatus = evt.to.querySelector('h2').textContent;
-    const themeIdx = tIndex; // thème courant
-    const item = board[themeIdx][fromStatus].splice(evt.oldIndex, 1)[0];
-    board[themeIdx][toStatus].splice(evt.newIndex, 0, item);
+  onEnd: (evt) => {
+    const themeIdx = tIndex;
+    const fromStatus = evt.from.dataset.status;
+    const toStatus = evt.to.dataset.status;
+
+    // récupérer l'élément déplacé
+    const [movedItem] = board[themeIdx][fromStatus].splice(evt.oldIndex, 1);
+
+    // l'insérer à la bonne position
+    board[themeIdx][toStatus].splice(evt.newIndex, 0, movedItem);
+
     save();
   }
 });
+
 
     });
     themeEl.appendChild(cols);
