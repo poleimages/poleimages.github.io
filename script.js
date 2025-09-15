@@ -1,15 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc 
+  getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc 
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-// --- CONFIG FIREBASE ---
 const firebaseConfig = {
   apiKey: "AIzaSyAaYmCxLn0aWSAWfww9fnJRvUGM9rt55vE",
   authDomain: "poleimages-8af23.firebaseapp.com",
@@ -19,12 +12,10 @@ const firebaseConfig = {
   appId: "1:816254286601:web:ee4e4e8238382fd3e5b1d8"
 };
 
-// --- INIT ---
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const COLLECTION = "kanban";
 
-// DOM
 const boardEl = document.getElementById("board");
 const addThemeBtn = document.getElementById("addThemeBtn");
 const modal = document.getElementById("modal");
@@ -37,14 +28,12 @@ const mPriority = document.getElementById("m-priority");
 let board = [];
 let currentEdit = null;
 
-// --- LOAD DATA ---
 async function loadData() {
   const snapshot = await getDocs(collection(db, COLLECTION));
   board = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
   render();
 }
 
-// --- SAVE SINGLE PROJECT ---
 async function saveProject(project) {
   if (!project.id) {
     const ref = await addDoc(collection(db, COLLECTION), project);
@@ -56,7 +45,6 @@ async function saveProject(project) {
   await loadData();
 }
 
-// --- DELETE PROJECT ---
 async function deleteProject(project) {
   if (!project.id) return;
   const ref = doc(db, COLLECTION, project.id);
@@ -64,7 +52,6 @@ async function deleteProject(project) {
   await loadData();
 }
 
-// --- RENDER ---
 function render() {
   boardEl.innerHTML = "";
   board.forEach(theme => {
@@ -73,7 +60,7 @@ function render() {
 
     const titleEl = document.createElement("div");
     titleEl.className = "theme-title";
-    titleEl.textContent = theme.title.toUpperCase();
+    titleEl.textContent = theme.title?.toUpperCase() || "NOUVEAU TYPE DE PROJET";
     themeEl.appendChild(titleEl);
 
     const cols = document.createElement("div");
@@ -84,10 +71,10 @@ function render() {
       colEl.className = "column";
       if(status==="À FAIRE") colEl.classList.add("column-a-faire");
       else if(status==="EN COURS") colEl.classList.add("column-en-cours");
-      else if(status==="TERMINÉ") colEl.classList.add("column-termine");
+      else colEl.classList.add("column-termine");
       colEl.innerHTML = `<h2>${status}</h2>`;
 
-      const tasks = (theme[status] || []);
+      const tasks = theme[status] || [];
       tasks.forEach(task => {
         const t = document.createElement("div");
         t.className = "task";
@@ -100,9 +87,7 @@ function render() {
         `;
         t.querySelector(".delete-task").addEventListener("click", e=>{
           e.stopPropagation();
-          if(confirm("Supprimer ce projet ?")) {
-            deleteProject(task);
-          }
+          if(confirm("Supprimer ce projet ?")) deleteProject(task);
         });
         t.addEventListener("click", ()=>openModal(task));
         colEl.appendChild(t);
@@ -125,7 +110,6 @@ function render() {
   });
 }
 
-// --- MODAL ---
 function openModal(task) {
   currentEdit = task;
   mTitle.value = task.title || "";
@@ -154,11 +138,9 @@ document.getElementById("modalSave").addEventListener("click", async ()=>{
 document.getElementById("modalCancel").addEventListener("click", closeModal);
 modal.addEventListener("click", e=>{if(e.target===modal) closeModal();});
 
-// --- ADD TYPE DE PROJET ---
 addThemeBtn.addEventListener("click", async ()=>{
   const newTheme = { title:"NOUVEAU TYPE DE PROJET", "À FAIRE":[], "EN COURS":[], "TERMINÉ":[] };
   await saveProject(newTheme);
 });
 
-// --- START ---
 loadData();
