@@ -1,0 +1,33 @@
+:root{--bg:#1e1e2f;--card:#2c2c40;--muted:#aaa}
+body{margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto; padding:20px;}
+h1{margin:0 0 18px;text-transform:uppercase}
+.controls{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+button{padding:8px 10px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#ddd}
+button.primary{background:#2563eb;color:#fff}
+.board{display:flex;flex-direction:column;gap:20px}
+.theme{border-radius:10px;padding:8px;background:transparent}
+.theme-title{font-size:16px;font-weight:700;margin-bottom:8px;text-transform:uppercase;cursor:pointer}
+.theme-columns{display:flex;gap:16px}
+.column{flex:1;min-height:180px;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;overflow:hidden}
+.col-head{display:flex;align-items:center;justify-content:center;font-weight:700;text-transform:uppercase;padding:6px 10px;border-radius:6px;margin-bottom:6px}
+.column-a-faire .col-head{background:#b33d3d;color:white}
+.column-en-cours .col-head{background:#c19a3c;color:white}
+.column-termine .col-head{background:#2b8a5e;color:white}
+.tasks-list{flex:1;overflow:auto;padding:6px;border-radius:8px}
+.task{background:var(--card);padding:10px;border-radius:8px;margin-bottom:8px;position:relative;box-shadow:0 6px 14px rgba(0,0,0,0.35)}
+.task-header{font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.task-meta{font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.task .delete-task{position:absolute;right:8px;top:8px;color:#ef4444;cursor:pointer}
+.add-area{display:flex;gap:8px;align-items:center}
+.add-sub{color:#60a5fa;cursor:pointer;font-weight:600}
+.small{font-size:13px}
+#modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:40}
+.modal-card{background:var(--card);padding:18px;border-radius:10px;min-width:320px;max-width:520px}
+.field{margin-bottom:8px}
+label{display:block;font-size:13px;color:#ddd;margin-bottom:6px}
+input[type=text], input[type=date], select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:#1b1b26;color:#fff}
+.footer-controls{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.tools{margin-left:auto;display:flex;gap:8px}
+.note{font-size:13px;color:#bbb;margin-top:10px}
+input[type=file]{display:none}
