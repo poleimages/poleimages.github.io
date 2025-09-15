@@ -4,13 +4,14 @@ import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstati
 
 // Firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  apiKey: "AIzaSyByYuQSuqdmcUCG9ayEu3knUAn0g-0eTOU",
+  authDomain: "poleimages-b5574.firebaseapp.com",
+  projectId: "poleimages-b5574",
+  storageBucket: "poleimages-b5574.firebasestorage.app",
+  messagingSenderId: "864866327007",
+  appId: "1:864866327007:web:5b7432c5e9464cab42cc6a"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
