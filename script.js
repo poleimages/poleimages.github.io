@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getFirestore, collection, getDocs, addDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-// Firebase config
+// --- Firebase config ---
 const firebaseConfig = {
   apiKey: "AIzaSyByYuQSuqdmcUCG9ayEu3knUAn0g-0eTOU",
   authDomain: "poleimages-b5574.firebaseapp.com",
@@ -11,11 +11,12 @@ const firebaseConfig = {
   messagingSenderId: "864866327007",
   appId: "1:864866327007:web:5b7432c5e9464cab42cc6a"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Elements DOM
+// --- DOM Elements ---
 const authContainer = document.getElementById("auth-container");
 const appContainer = document.getElementById("app-container");
 const loginEmail = document.getElementById("loginEmail");
@@ -40,64 +41,47 @@ let currentEdit = null;
 let dragData = null;
 let currentUser = null;
 
-// Gestion de l'authentification
+// --- Auth Management ---
 onAuthStateChanged(auth, (user) => {
   if (user) {
     currentUser = user.email;
     userInfo.textContent = `Connecté: ${user.email}`;
+    logoutBtn.style.display = "inline-block";
     authContainer.style.display = "none";
-    appContainer.style.display = "block";
-    loadBoard();
   } else {
     currentUser = null;
-    authContainer.style.display = "flex";
-    appContainer.style.display = "none";
-    authError.textContent = "";
+    userInfo.textContent = "Lecture seule";
+    logoutBtn.style.display = "none";
   }
 });
 
-// Connexion
+// Login
 loginBtn.addEventListener("click", async () => {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
-  
-  if (!email || !password) {
-    authError.textContent = "Veuillez remplir tous les champs";
-    return;
-  }
-  
+  if (!email || !password) { authError.textContent = "Veuillez remplir tous les champs"; return; }
   try {
     await signInWithEmailAndPassword(auth, email, password);
     authError.textContent = "";
+    authContainer.style.display = "none";
   } catch (error) {
     authError.textContent = "Email ou mot de passe incorrect";
   }
 });
 
-// Déconnexion
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-});
+// Logout
+logoutBtn.addEventListener("click", async () => { await signOut(auth); });
 
-// Enter pour se connecter
-loginPassword.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    loginBtn.click();
-  }
-});
+// Enter key login
+loginPassword.addEventListener("keypress", (e) => { if(e.key==="Enter") loginBtn.click(); });
 
-// Ajouter thème
+// --- Theme & Task Management ---
 addThemeBtn.addEventListener("click", async () => {
-  await addDoc(collection(db, "kanban"), {
-    title: "NOUVEAU TYPE DE PROJET",
-    "À faire": [],
-    "En cours": [],
-    "Terminé": []
-  });
+  if(!currentUser) { authContainer.style.display="flex"; return; }
+  await addDoc(collection(db,"kanban"), { title:"NOUVEAU TYPE DE PROJET", "À faire":[], "En cours":[], "Terminé":[] });
   loadBoard();
 });
 
-// Ajouter item checklist dans modal
 addChecklistBtn.addEventListener("click", () => {
   const div = document.createElement("div");
   div.className = "checklist-item";
@@ -106,7 +90,7 @@ addChecklistBtn.addEventListener("click", () => {
   checklistContainer.appendChild(div);
 });
 
-// Charger board
+// --- Load Board ---
 async function loadBoard() {
   boardEl.innerHTML = "";
   const snapshot = await getDocs(collection(db, "kanban"));
@@ -121,94 +105,95 @@ async function loadBoard() {
     titleEl.className = "theme-title";
     titleEl.textContent = theme.title.toUpperCase();
     titleEl.addEventListener("click", async () => {
+      if(!currentUser){ authContainer.style.display="flex"; return; }
       const newTitle = prompt("Nouveau nom du type de projet :", theme.title);
-      if (newTitle) {
-        await updateDoc(doc(db, "kanban", themeId), { title: newTitle });
-        loadBoard();
-      }
+      if(newTitle){ await updateDoc(doc(db,"kanban",themeId), { title:newTitle }); loadBoard(); }
     });
     themeEl.appendChild(titleEl);
 
     const cols = document.createElement("div");
     cols.className = "theme-columns";
 
-    ["À faire", "En cours", "Terminé"].forEach(status => {
+    ["À faire","En cours","Terminé"].forEach(status => {
       const colEl = document.createElement("div");
-      colEl.className = "column";
-      if (status === "À faire") colEl.classList.add("column-a-faire");
-      else if (status === "En cours") colEl.classList.add("column-en-cours");
+      colEl.className="column";
+      if(status==="À faire") colEl.classList.add("column-a-faire");
+      else if(status==="En cours") colEl.classList.add("column-en-cours");
       else colEl.classList.add("column-termine");
-      colEl.innerHTML = `<h2>${status.toUpperCase()}</h2>`;
+      colEl.innerHTML=`<h2>${status.toUpperCase()}</h2>`;
 
-      colEl.addEventListener("dragover", e => e.preventDefault());
-      colEl.addEventListener("drop", async e => {
-        if (!dragData) return;
+      colEl.addEventListener("dragover", e=>e.preventDefault());
+      colEl.addEventListener("drop", async e=>{
+        if(!currentUser){ authContainer.style.display="flex"; return; }
+        if(!dragData) return;
         const { themeId: srcThemeId, status: srcStatus, index } = dragData;
-        if (srcThemeId !== themeId) return;
-        const updated = { ...theme };
-        const [movedTask] = updated[srcStatus].splice(index, 1);
+        if(srcThemeId !== themeId) return;
+        const updated = {...theme};
+        const [movedTask] = updated[srcStatus].splice(index,1);
         movedTask.lastModifiedBy = currentUser;
         movedTask.lastModifiedAt = new Date().toLocaleString('fr-FR');
         updated[status].push(movedTask);
-        await updateDoc(doc(db, "kanban", themeId), updated);
+        await updateDoc(doc(db,"kanban",themeId), updated);
         dragData = null;
         loadBoard();
       });
 
-      (theme[status] || []).forEach((task, i) => {
-        if (!task.checklist) task.checklist = [];
+      (theme[status] || []).forEach((task,i)=>{
+        if(!task.checklist) task.checklist=[];
         const t = document.createElement("div");
         t.className = "task";
-        t.setAttribute("draggable", "true");
+        t.setAttribute("draggable","true");
 
         const lastModified = task.lastModifiedBy ? 
-          `<div class="last-modified">Modifié par ${task.lastModifiedBy}${task.lastModifiedAt ? ` le ${task.lastModifiedAt}` : ''}</div>` : '';
+          `<div class="last-modified">Modifié par ${task.lastModifiedBy}${task.lastModifiedAt?` le ${task.lastModifiedAt}`:''}</div>` : '';
 
         t.innerHTML = `
           <span class="delete-task" title="Supprimer tâche">✖</span>
           <div class="task-header">${task.title.toUpperCase()}</div>
-          <div class="task-info">Équipe: ${task.team || "-"}</div>
-          <div class="task-info"><span class="badge badge-${(task.priority || "MOYENNE").toLowerCase()}">${task.priority || "MOYENNE"}</span></div>
-          <div class="task-dates">${task.start ? "Début: " + task.start : ""} ${task.end ? "| Fin: " + task.end : ""}</div>
+          <div class="task-info">Équipe: ${task.team||"-"}</div>
+          <div class="task-info"><span class="badge badge-${(task.priority||"MOYENNE").toLowerCase()}">${task.priority||"MOYENNE"}</span></div>
+          <div class="task-dates">${task.start?"Début: "+task.start:""} ${task.end?"| Fin: "+task.end:""}</div>
           ${lastModified}
         `;
 
-        // Checklist affichée sur carte
+        // Checklist visible et modifiable directement
         const checklistDiv = document.createElement("div");
         checklistDiv.className = "checklist-on-card";
-        task.checklist.forEach((item, idx) => {
+        task.checklist.forEach((item, idx)=>{
           const itemDiv = document.createElement("div");
-          itemDiv.className = "checklist-item";
+          itemDiv.className="checklist-item";
 
           const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
+          checkbox.type="checkbox";
           checkbox.checked = item.done;
-          checkbox.addEventListener("change", async (e) => {
+          checkbox.addEventListener("change", async e=>{
             e.stopPropagation();
-            const updated = { ...theme };
+            if(!currentUser){ authContainer.style.display="flex"; loadBoard(); return; }
+            const updated = {...theme};
             updated[status][i].checklist[idx].done = checkbox.checked;
             updated[status][i].lastModifiedBy = currentUser;
             updated[status][i].lastModifiedAt = new Date().toLocaleString('fr-FR');
-            await updateDoc(doc(db, "kanban", themeId), updated);
+            await updateDoc(doc(db,"kanban",themeId), updated);
             loadBoard();
           });
 
           const textSpan = document.createElement("span");
-          textSpan.className = "checklist-text";
-          textSpan.textContent = item.text;
+          textSpan.className="checklist-text";
+          textSpan.textContent=item.text;
 
           const deleteSpan = document.createElement("span");
-          deleteSpan.className = "delete-check";
-          deleteSpan.textContent = "✖";
-          deleteSpan.title = "Supprimer cet élément";
-          deleteSpan.addEventListener("click", async (e) => {
+          deleteSpan.className="delete-check";
+          deleteSpan.textContent="✖";
+          deleteSpan.title="Supprimer cet élément";
+          deleteSpan.addEventListener("click", async e=>{
             e.stopPropagation();
-            if (confirm("Supprimer cet élément de la checklist ?")) {
-              const updated = { ...theme };
-              updated[status][i].checklist.splice(idx, 1);
+            if(!currentUser){ authContainer.style.display="flex"; loadBoard(); return; }
+            if(confirm("Supprimer cet élément de la checklist ?")){
+              const updated = {...theme};
+              updated[status][i].checklist.splice(idx,1);
               updated[status][i].lastModifiedBy = currentUser;
               updated[status][i].lastModifiedAt = new Date().toLocaleString('fr-FR');
-              await updateDoc(doc(db, "kanban", themeId), updated);
+              await updateDoc(doc(db,"kanban",themeId), updated);
               loadBoard();
             }
           });
@@ -220,47 +205,39 @@ async function loadBoard() {
         });
         t.appendChild(checklistDiv);
 
-        t.querySelector(".delete-task").addEventListener("click", async e => {
+        t.querySelector(".delete-task").addEventListener("click", async e=>{
           e.stopPropagation();
-          if (confirm("Supprimer ce projet ?")) {
-            const updated = { ...theme };
-            updated[status].splice(i, 1);
-            await updateDoc(doc(db, "kanban", themeId), updated);
+          if(!currentUser){ authContainer.style.display="flex"; return; }
+          if(confirm("Supprimer ce projet ?")){
+            const updated = {...theme};
+            updated[status].splice(i,1);
+            await updateDoc(doc(db,"kanban",themeId), updated);
             loadBoard();
           }
         });
 
-        t.addEventListener("click", (e) => {
-          // Ne pas ouvrir la modal si on clique sur une checkbox ou un bouton de suppression
-          if (e.target.type === 'checkbox' || e.target.classList.contains('delete-check') || e.target.classList.contains('delete-task')) {
-            return;
-          }
-          openModal(themeId, status, i);
+        t.addEventListener("click", e=>{
+          if(e.target.type==='checkbox'||e.target.classList.contains('delete-check')||e.target.classList.contains('delete-task')) return;
+          if(!currentUser){ authContainer.style.display="flex"; return; }
+          openModal(themeId,status,i);
         });
 
-        t.addEventListener("dragstart", () => {
-          dragData = { themeId, status, index: i };
+        t.addEventListener("dragstart", ()=>{
+          if(!currentUser){ authContainer.style.display="flex"; return; }
+          dragData = {themeId,status,index:i};
         });
 
         colEl.appendChild(t);
       });
 
       const addBtn = document.createElement("button");
-      addBtn.className = "ghost";
-      addBtn.textContent = "+ PROJET";
-      addBtn.addEventListener("click", async () => {
-        const updated = { ...theme };
-        updated[status].push({
-          title: "NOUVEAU PROJET", 
-          start: "", 
-          end: "", 
-          team: "", 
-          priority: "MOYENNE", 
-          checklist: [],
-          lastModifiedBy: currentUser,
-          lastModifiedAt: new Date().toLocaleString('fr-FR')
-        });
-        await updateDoc(doc(db, "kanban", themeId), updated);
+      addBtn.className="ghost";
+      addBtn.textContent="+ PROJET";
+      addBtn.addEventListener("click", async ()=>{
+        if(!currentUser){ authContainer.style.display="flex"; return; }
+        const updated = {...theme};
+        updated[status].push({title:"NOUVEAU PROJET", start:"", end:"", team:"", priority:"MOYENNE", checklist:[], lastModifiedBy:currentUser, lastModifiedAt: new Date().toLocaleString('fr-FR')});
+        await updateDoc(doc(db,"kanban",themeId), updated);
         loadBoard();
       });
       colEl.appendChild(addBtn);
@@ -273,64 +250,55 @@ async function loadBoard() {
   });
 }
 
-// Modal édition
-function openModal(themeId, status, index) {
-  currentEdit = { themeId, status, index };
-  (async () => {
-    const docSnap = await getDocs(collection(db, "kanban"));
-    const themeData = docSnap.docs.find(d => d.id === themeId).data();
+// --- Modal Edition ---
+function openModal(themeId,status,index){
+  currentEdit={themeId,status,index};
+  (async()=>{
+    const docSnap = await getDocs(collection(db,"kanban"));
+    const themeData = docSnap.docs.find(d=>d.id===themeId).data();
     const task = themeData[status][index];
-    mTitle.value = task.title;
-    mStart.value = task.start;
-    mEnd.value = task.end;
-    mTeam.value = task.team;
-    mPriority.value = task.priority;
+    mTitle.value=task.title;
+    mStart.value=task.start;
+    mEnd.value=task.end;
+    mTeam.value=task.team;
+    mPriority.value=task.priority;
 
-    checklistContainer.innerHTML = "";
-    task.checklist.forEach(item => {
+    checklistContainer.innerHTML="";
+    task.checklist.forEach(item=>{
       const div = document.createElement("div");
-      div.className = "checklist-item";
-      div.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''}><input type="text" value="${item.text}"><span class="delete-check">✖</span>`;
-      div.querySelector(".delete-check").addEventListener("click", () => div.remove());
+      div.className="checklist-item";
+      div.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><input type="text" value="${item.text}"><span class="delete-check">✖</span>`;
+      div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
       checklistContainer.appendChild(div);
     });
 
-    modal.style.display = "flex";
+    modal.style.display="flex";
   })();
 }
 
-document.getElementById("modalSave").addEventListener("click", async () => {
-  if (!currentEdit) return;
-  const { themeId, status, index } = currentEdit;
-  const docSnap = await getDocs(collection(db, "kanban"));
-  const themeData = docSnap.docs.find(d => d.id === themeId).data();
+document.getElementById("modalSave").addEventListener("click", async ()=>{
+  if(!currentEdit) return;
+  if(!currentUser){ authContainer.style.display="flex"; return; }
+
+  const {themeId,status,index} = currentEdit;
+  const docSnap = await getDocs(collection(db,"kanban"));
+  const themeData = docSnap.docs.find(d=>d.id===themeId).data();
   const task = themeData[status][index];
 
-  const newChecklist = [];
-  checklistContainer.querySelectorAll(".checklist-item").forEach(div => {
-    newChecklist.push({
-      done: div.querySelector('input[type="checkbox"]').checked,
-      text: div.querySelector('input[type="text"]').value
-    });
+  const newChecklist=[];
+  checklistContainer.querySelectorAll(".checklist-item").forEach(div=>{
+    newChecklist.push({ done: div.querySelector('input[type="checkbox"]').checked, text: div.querySelector('input[type="text"]').value });
   });
 
-  const updated = { ...themeData };
-  updated[status][index] = {
-    ...task,
-    title: mTitle.value,
-    start: mStart.value,
-    end: mEnd.value,
-    team: mTeam.value,
-    priority: mPriority.value,
-    checklist: newChecklist,
-    lastModifiedBy: currentUser,
-    lastModifiedAt: new Date().toLocaleString('fr-FR')
-  };
+  const updated = {...themeData};
+  updated[status][index]={ ...task, title:mTitle.value, start:mStart.value, end:mEnd.value, team:mTeam.value, priority:mPriority.value, checklist:newChecklist, lastModifiedBy:currentUser, lastModifiedAt:new Date().toLocaleString('fr-FR') };
 
-  await updateDoc(doc(db, "kanban", themeId), updated);
-  modal.style.display = "none";
+  await updateDoc(doc(db,"kanban",themeId), updated);
+  modal.style.display="none";
   loadBoard();
 });
 
-document.getElementById("modalCancel").addEventListener("click", () => modal.style.display = "none");
-modal.addEventListener("click", e => { if (e.target === modal) modal.style.display = "none"; });
+document.getElementById("modalCancel").addEventListener("click", ()=>modal.style.display="none");
+modal.addEventListener("click", e=>{if(e.target===modal) modal.style.display="none";});
+
+loadBoard();
