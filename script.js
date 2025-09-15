@@ -1,160 +1,138 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const STORAGE_KEY = "kanban-data";
-  let board = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  let currentEdit = null;
+// --- ⚡ Remplace par ta config Firebase ---
+const firebaseConfig = {
+  apiKey: "TON_API_KEY",
+  authDomain: "TON_PROJECT.firebaseapp.com",
+  projectId: "TON_PROJECT",
+  storageBucket: "TON_PROJECT.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:xxx"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = "kanban"; // nom Firestore
 
-  const boardEl = document.getElementById("board");
-  const modal = document.getElementById("modal");
+let board = [];
+let currentEdit = null;
 
-  const mTitle = document.getElementById("mTitle");
-  const mStart = document.getElementById("mStart");
-  const mEnd = document.getElementById("mEnd");
-  const mTeam = document.getElementById("mTeam");
-  const mPriority = document.getElementById("mPriority");
+const boardEl = document.getElementById("board");
+const modal = document.getElementById("modal");
+const mTitle = document.getElementById("m-title");
+const mStart = document.getElementById("m-start");
+const mEnd = document.getElementById("m-end");
+const mTeam = document.getElementById("m-team");
+const mPriority = document.getElementById("m-priority");
 
-  document.getElementById("btnAddTheme").addEventListener("click", () => {
-    board.push({ title:"NOUVEAU TYPE DE PROJET", "À faire":[], "En cours":[], "Terminé":[] });
-    save();
-  });
-
-  document.getElementById("btnExport").addEventListener("click", () => {
-    const dataStr = JSON.stringify(board, null, 2);
-    const blob = new Blob([dataStr], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "kanban.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  document.getElementById("btnReset").addEventListener("click", () => {
-    if(confirm("Supprimer toutes les données ?")) {
-      board = [];
-      save();
-    }
-  });
-
-  document.getElementById("importFile").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        board = JSON.parse(ev.target.result);
-        save();
-      } catch(err) {
-        alert("Fichier JSON invalide");
-      }
-    };
-    reader.readAsText(file);
-  });
-
-  function render() {
-    boardEl.innerHTML = "";
-    board.forEach((theme, tIndex) => {
-      const themeEl = document.createElement("div");
-      themeEl.className = "theme";
-
-      const titleEl = document.createElement("div");
-      titleEl.className = "theme-title";
-      titleEl.textContent = theme.title;
-      titleEl.onclick = () => {
-        const newTitle = prompt("Nouveau nom du type :", theme.title);
-        if(newTitle) { theme.title = newTitle.toUpperCase(); save(); }
-      };
-      themeEl.appendChild(titleEl);
-
-      const cols = document.createElement("div");
-      cols.className = "theme-columns";
-
-      ["À faire","En cours","Terminé"].forEach(status => {
-        const colEl = document.createElement("div");
-        colEl.className = "column";
-        colEl.dataset.status = status;
-        if(status==="À faire") colEl.classList.add("column-a-faire");
-        if(status==="En cours") colEl.classList.add("column-en-cours");
-        if(status==="Terminé") colEl.classList.add("column-termine");
-
-        const head = document.createElement("div");
-        head.className="col-head";
-        head.textContent=status.toUpperCase();
-        colEl.appendChild(head);
-
-        const list = document.createElement("div");
-        list.className="tasks-list";
-        theme[status].forEach((task,i) => {
-          const t=document.createElement("div");
-          t.className="task";
-          t.innerHTML=`<span class="delete-task">✖</span>
-          <div class="task-header">${task.title}</div>
-          <div class="task-meta">Equipe: ${task.team||"-"} | ${task.priority||"Moyenne"}</div>
-          <div class="task-meta">${task.start||""} ${task.end?(" - "+task.end):""}</div>`;
-          t.querySelector(".delete-task").onclick = e => {
-            e.stopPropagation();
-            if(confirm("Supprimer ce projet ?")) {
-              theme[status].splice(i,1);
-              save();
-            }
-          };
-          t.onclick = ()=> openModal(tIndex,status,i);
-          list.appendChild(t);
-        });
-        colEl.appendChild(list);
-
-        const addBtn = document.createElement("button");
-        addBtn.className="ghost";
-        addBtn.textContent="+ PROJET";
-        addBtn.onclick=()=>{
-          theme[status].push({title:"NOUVEAU PROJET",start:"",end:"",team:"",priority:"Moyenne"});
-          save();
-        };
-        colEl.appendChild(addBtn);
-
-        cols.appendChild(colEl);
-
-        new Sortable(list,{
-          group:"tasks",
-          animation:150,
-          onEnd:evt=>{
-            const from=evt.from.closest(".column").dataset.status;
-            const to=evt.to.closest(".column").dataset.status;
-            const [moved]=board[tIndex][from].splice(evt.oldIndex,1);
-            board[tIndex][to].splice(evt.newIndex,0,moved);
-            save();
-          }
-        });
-      });
-      themeEl.appendChild(cols);
-      boardEl.appendChild(themeEl);
-    });
-  }
-
-  function openModal(themeIdx,status,taskIdx){
-    currentEdit={themeIdx,status,taskIdx};
-    const task=board[themeIdx][status][taskIdx];
-    mTitle.value=task.title;
-    mStart.value=task.start;
-    mEnd.value=task.end;
-    mTeam.value=task.team;
-    mPriority.value=task.priority;
-    modal.style.display="flex";
-  }
-  function closeModal(){modal.style.display="none";currentEdit=null;}
-  document.getElementById("modalSave").onclick=()=>{
-    if(!currentEdit) return closeModal();
-    const {themeIdx,status,taskIdx}=currentEdit;
-    const task=board[themeIdx][status][taskIdx];
-    task.title=mTitle.value.toUpperCase();
-    task.start=mStart.value;
-    task.end=mEnd.value;
-    task.team=mTeam.value;
-    task.priority=mPriority.value;
-    save(); closeModal();
-  };
-  document.getElementById("modalCancel").onclick=closeModal;
-  modal.addEventListener("click",e=>{if(e.target===modal) closeModal();});
-
-  function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(board));render();}
+// Charger depuis Firestore
+async function loadData() {
+  const snapshot = await db.collection(COLLECTION).get();
+  board = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   render();
+}
+
+// Sauvegarder tout dans Firestore
+async function saveData() {
+  // Effacer et réécrire
+  const snapshot = await db.collection(COLLECTION).get();
+  const batch = db.batch();
+  snapshot.forEach(doc => batch.delete(doc.ref));
+  board.forEach(theme => {
+    const ref = db.collection(COLLECTION).doc();
+    batch.set(ref, theme);
+  });
+  await batch.commit();
+  render();
+}
+
+// Rendu
+function render() {
+  boardEl.innerHTML = "";
+  board.forEach((theme, tIndex) => {
+    const themeEl = document.createElement("div");
+    themeEl.className = "theme";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "theme-title";
+    titleEl.textContent = theme.title;
+    themeEl.appendChild(titleEl);
+
+    const cols = document.createElement("div");
+    cols.className = "theme-columns";
+
+    ["À FAIRE","EN COURS","TERMINÉ"].forEach(status => {
+      const colEl = document.createElement("div");
+      colEl.className = "column";
+      if(status==="À FAIRE") colEl.classList.add("column-a-faire");
+      else if(status==="EN COURS") colEl.classList.add("column-en-cours");
+      else if(status==="TERMINÉ") colEl.classList.add("column-termine");
+
+      colEl.innerHTML = `<h2>${status}</h2>`;
+
+      (theme[status] || []).forEach((task, i) => {
+        const t = document.createElement("div");
+        t.className = "task";
+        t.innerHTML = `
+          <span class="delete-task">✖</span>
+          <div class="task-header">${task.title}</div>
+          <div class="task-info">Équipe: ${task.team || "-"}</div>
+          <div class="task-info"><span class="badge badge-${(task.priority||"Moyenne").toLowerCase()}">${task.priority||"Moyenne"}</span></div>
+          <div class="task-dates">${task.start ? "Début: " + task.start : ""} ${task.end ? " | Fin: " + task.end : ""}</div>
+        `;
+        t.querySelector(".delete-task").addEventListener("click", e => {
+          e.stopPropagation();
+          if(confirm("Supprimer ce projet ?")) { theme[status].splice(i,1); saveData(); }
+        });
+        t.addEventListener("click", () => openModal(tIndex, status, i));
+        colEl.appendChild(t);
+      });
+
+      const addBtn = document.createElement("button");
+      addBtn.className="ghost";
+      addBtn.textContent="+ PROJET";
+      addBtn.addEventListener("click", () => {
+        theme[status].push({ title:"Nouveau projet", start:"", end:"", team:"", priority:"Moyenne" });
+        saveData();
+      });
+      colEl.appendChild(addBtn);
+
+      cols.appendChild(colEl);
+    });
+
+    themeEl.appendChild(cols);
+    boardEl.appendChild(themeEl);
+  });
+}
+
+function openModal(themeIdx, status, taskIdx) {
+  currentEdit = { themeIdx, status, taskIdx };
+  const task = board[themeIdx][status][taskIdx];
+  mTitle.value = task.title;
+  mStart.value = task.start;
+  mEnd.value = task.end;
+  mTeam.value = task.team;
+  mPriority.value = task.priority;
+  modal.style.display = "flex";
+}
+function closeModal() { modal.style.display="none"; currentEdit=null; }
+
+document.getElementById("modalSave").addEventListener("click", () => {
+  if(!currentEdit) return closeModal();
+  const {themeIdx,status,taskIdx}=currentEdit;
+  const task=board[themeIdx][status][taskIdx];
+  task.title=mTitle.value;
+  task.start=mStart.value;
+  task.end=mEnd.value;
+  task.team=mTeam.value;
+  task.priority=mPriority.value;
+  saveData();
+  closeModal();
 });
+document.getElementById("modalCancel").addEventListener("click", closeModal);
+modal.addEventListener("click", e=>{if(e.target===modal) closeModal();});
+
+document.getElementById("addThemeBtn").addEventListener("click", () => {
+  board.push({ title:"NOUVEAU TYPE DE PROJET", "À FAIRE":[], "EN COURS":[], "TERMINÉ":[] });
+  saveData();
+});
+
+// Démarrage
+loadData();

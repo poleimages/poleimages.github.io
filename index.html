@@ -1,46 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>PLAN DE PRODUCTION — IMAGES</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PLAN DE PRODUCTION - IMAGES</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <h1>PLAN DE PRODUCTION - IMAGES</h1>
 
-<h1>PLAN DE PRODUCTION — IMAGES</h1>
-
-<div class="controls">
-  <button id="btnAddTheme" class="primary">+ TYPE DE PROJET</button>
-  <div class="tools">
-    <button id="btnExport" class="ghost">Exporter JSON</button>
-    <label class="ghost" for="importFile" style="cursor:pointer;padding:6px 10px;border-radius:8px;">Importer</label>
-    <input id="importFile" type="file" accept=".json">
-    <button id="btnReset" class="ghost">Réinitialiser</button>
+  <div id="board" class="board"></div>
+  <div style="margin-top:12px;">
+    <button id="addThemeBtn">+ TYPE DE PROJET</button>
   </div>
-</div>
 
-<div id="board" class="board"></div>
-
-<div id="modal" aria-hidden="true">
-  <div class="modal-card" role="dialog" aria-modal="true">
-    <h3 id="modalTitle">ÉDITER PROJET</h3>
-    <div class="field"><label>TITRE</label><input id="mTitle" type="text" /></div>
-    <div class="field"><label>DATE DÉBUT</label><input id="mStart" type="date" /></div>
-    <div class="field"><label>DATE FIN</label><input id="mEnd" type="date" /></div>
-    <div class="field"><label>PERSONNE(S)</label><input id="mTeam" type="text" /></div>
-    <div class="field"><label>PRIORITÉ</label>
-      <select id="mPriority"><option>Haute</option><option>Moyenne</option><option>Basse</option></select>
-    </div>
-    <div class="footer-controls">
-      <button id="modalCancel" class="ghost">ANNULER</button>
-      <button id="modalSave" class="primary">ENREGISTRER</button>
+  <!-- Modal -->
+  <div id="modal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">ÉDITER PROJET</h3>
+      <div class="field"><label>Titre</label><input id="m-title" type="text" /></div>
+      <div class="field"><label>Date début</label><input id="m-start" type="date" /></div>
+      <div class="field"><label>Date fin</label><input id="m-end" type="date" /></div>
+      <div class="field"><label>Personne(s) sur le projet</label><input id="m-team" type="text" /></div>
+      <div class="field"><label>Priorité</label>
+        <select id="m-priority">
+          <option>Haute</option>
+          <option>Moyenne</option>
+          <option>Basse</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="ghost">ANNULER</button>
+        <button id="modalSave">ENREGISTRER</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-<script src="script.js"></script>
+  <script type="module">
+
+  // Import the functions you need from the SDKs you need
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+  // TODO: Add SDKs for Firebase products that you want to use
+
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+
+  // Your web app's Firebase configuration
+
+  const firebaseConfig = {
+
+    apiKey: "AIzaSyAaYmCxLn0aWSAWfww9fnJRvUGM9rt55vE",
+
+    authDomain: "poleimages-8af23.firebaseapp.com",
+
+    projectId: "poleimages-8af23",
+
+    storageBucket: "poleimages-8af23.firebasestorage.app",
+
+    messagingSenderId: "816254286601",
+
+    appId: "1:816254286601:web:ee4e4e8238382fd3e5b1d8"
+
+  };
+
+
+  // Initialize Firebase
+
+  const app = initializeApp(firebaseConfig);
+
+</script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script src="script.js"></script>
 </body>
 </html>
