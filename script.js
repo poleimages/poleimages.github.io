@@ -27,13 +27,13 @@ const addChecklistBtn = document.getElementById("addChecklistBtn");
 let currentEdit = null;
 let dragData = null;
 
-// Ajouter thème
+// Ajouter thÃ¨me
 addThemeBtn.addEventListener("click", async ()=>{
   await addDoc(collection(db,"kanban"), {
     title:"NOUVEAU TYPE DE PROJET",
-    "À faire":[],
+    "Ã€ faire":[],
     "En cours":[],
-    "Terminé":[]
+    "TerminÃ©":[]
   });
   loadBoard();
 });
@@ -42,7 +42,7 @@ addThemeBtn.addEventListener("click", async ()=>{
 addChecklistBtn.addEventListener("click", ()=>{
   const div = document.createElement("div");
   div.className="checklist-item";
-  div.innerHTML = `<input type="checkbox"><input type="text" value=""><span class="delete-check">✖</span>`;
+  div.innerHTML = `<input type="checkbox"><input type="text" value=""><span class="delete-check">âœ–</span>`;
   div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
   checklistContainer.appendChild(div);
 });
@@ -73,10 +73,10 @@ async function loadBoard(){
     const cols = document.createElement("div");
     cols.className="theme-columns";
 
-    ["À faire","En cours","Terminé"].forEach(status=>{
+    ["Ã€ faire","En cours","TerminÃ©"].forEach(status=>{
       const colEl = document.createElement("div");
       colEl.className="column";
-      if(status==="À faire") colEl.classList.add("column-a-faire");
+      if(status==="Ã€ faire") colEl.classList.add("column-a-faire");
       else if(status==="En cours") colEl.classList.add("column-en-cours");
       else colEl.classList.add("column-termine");
       colEl.innerHTML=`<h2>${status.toUpperCase()}</h2>`;
@@ -100,14 +100,14 @@ async function loadBoard(){
         t.className="task";
         t.setAttribute("draggable","true");
         t.innerHTML=`
-          <span class="delete-task" title="Supprimer tâche">✖</span>
+          <span class="delete-task" title="Supprimer tÃ¢che">âœ–</span>
           <div class="task-header">${task.title.toUpperCase()}</div>
-          <div class="task-info">Équipe: ${task.team || "-"}</div>
+          <div class="task-info">Ã‰quipe: ${task.team || "-"}</div>
           <div class="task-info"><span class="badge badge-${(task.priority||"MOYENNE").toLowerCase()}">${task.priority||"MOYENNE"}</span></div>
-          <div class="task-dates">${task.start?"Début: "+task.start:""} ${task.end?"| Fin: "+task.end:""}</div>
+          <div class="task-dates">${task.start?"DÃ©but: "+task.start:""} ${task.end?"| Fin: "+task.end:""}</div>
         `;
 
-        // Checklist affichée sur carte
+        // Checklist affichÃ©e sur carte
         const checklistDiv = document.createElement("div");
         checklistDiv.className="checklist-on-card";
         task.checklist.forEach((item, idx)=>{
@@ -165,7 +165,7 @@ async function loadBoard(){
   });
 }
 
-// Modal édition
+// Modal Ã©dition
 function openModal(themeId,status,index){
   currentEdit={themeId,status,index};
   (async ()=>{
@@ -182,7 +182,7 @@ function openModal(themeId,status,index){
     task.checklist.forEach(item=>{
       const div = document.createElement("div");
       div.className="checklist-item";
-      div.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><input type="text" value="${item.text}"><span class="delete-check">✖</span>`;
+      div.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><input type="text" value="${item.text}"><span class="delete-check">âœ–</span>`;
       div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
       checklistContainer.appendChild(div);
     });
