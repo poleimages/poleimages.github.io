@@ -49,7 +49,7 @@
     doc 
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // ✅ Config Firebase (la tienne)
+  // Config Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAaYmCxLn0aWSAWfww9fnJRvUGM9rt55vE",
     authDomain: "poleimages-8af23.firebaseapp.com",
@@ -59,7 +59,7 @@
     appId: "1:816254286601:web:ee4e4e8238382fd3e5b1d8"
   };
 
-  // 🔥 Initialisation Firebase
+  // Initialisation Firebase
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -99,7 +99,7 @@
     console.log("Projet supprimé :", id);
   }
 
-  // 🚀 Tests
+  // Tests
   await addProjet();
   await getProjets();
 </script>

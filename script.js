@@ -1,20 +1,32 @@
-// --- ⚡ Remplace par ta config Firebase ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc 
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+// --- CONFIG FIREBASE ---
 const firebaseConfig = {
-  apiKey: "TON_API_KEY",
-  authDomain: "TON_PROJECT.firebaseapp.com",
-  projectId: "TON_PROJECT",
-  storageBucket: "TON_PROJECT.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:xxx"
+  apiKey: "AIzaSyAaYmCxLn0aWSAWfww9fnJRvUGM9rt55vE",
+  authDomain: "poleimages-8af23.firebaseapp.com",
+  projectId: "poleimages-8af23",
+  storageBucket: "poleimages-8af23.firebasestorage.app",
+  messagingSenderId: "816254286601",
+  appId: "1:816254286601:web:ee4e4e8238382fd3e5b1d8"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const COLLECTION = "kanban"; // nom Firestore
 
-let board = [];
-let currentEdit = null;
+// --- INIT ---
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const COLLECTION = "kanban";
 
+// DOM
 const boardEl = document.getElementById("board");
+const addThemeBtn = document.getElementById("addThemeBtn");
 const modal = document.getElementById("modal");
 const mTitle = document.getElementById("m-title");
 const mStart = document.getElementById("m-start");
@@ -22,37 +34,46 @@ const mEnd = document.getElementById("m-end");
 const mTeam = document.getElementById("m-team");
 const mPriority = document.getElementById("m-priority");
 
-// Charger depuis Firestore
+let board = [];
+let currentEdit = null;
+
+// --- LOAD DATA ---
 async function loadData() {
-  const snapshot = await db.collection(COLLECTION).get();
-  board = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const snapshot = await getDocs(collection(db, COLLECTION));
+  board = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
   render();
 }
 
-// Sauvegarder tout dans Firestore
-async function saveData() {
-  // Effacer et réécrire
-  const snapshot = await db.collection(COLLECTION).get();
-  const batch = db.batch();
-  snapshot.forEach(doc => batch.delete(doc.ref));
-  board.forEach(theme => {
-    const ref = db.collection(COLLECTION).doc();
-    batch.set(ref, theme);
-  });
-  await batch.commit();
-  render();
+// --- SAVE SINGLE PROJECT ---
+async function saveProject(project) {
+  if (!project.id) {
+    const ref = await addDoc(collection(db, COLLECTION), project);
+    project.id = ref.id;
+  } else {
+    const ref = doc(db, COLLECTION, project.id);
+    await updateDoc(ref, project);
+  }
+  await loadData();
 }
 
-// Rendu
+// --- DELETE PROJECT ---
+async function deleteProject(project) {
+  if (!project.id) return;
+  const ref = doc(db, COLLECTION, project.id);
+  await deleteDoc(ref);
+  await loadData();
+}
+
+// --- RENDER ---
 function render() {
   boardEl.innerHTML = "";
-  board.forEach((theme, tIndex) => {
+  board.forEach(theme => {
     const themeEl = document.createElement("div");
     themeEl.className = "theme";
 
     const titleEl = document.createElement("div");
     titleEl.className = "theme-title";
-    titleEl.textContent = theme.title;
+    titleEl.textContent = theme.title.toUpperCase();
     themeEl.appendChild(titleEl);
 
     const cols = document.createElement("div");
@@ -64,10 +85,10 @@ function render() {
       if(status==="À FAIRE") colEl.classList.add("column-a-faire");
       else if(status==="EN COURS") colEl.classList.add("column-en-cours");
       else if(status==="TERMINÉ") colEl.classList.add("column-termine");
-
       colEl.innerHTML = `<h2>${status}</h2>`;
 
-      (theme[status] || []).forEach((task, i) => {
+      const tasks = (theme[status] || []);
+      tasks.forEach(task => {
         const t = document.createElement("div");
         t.className = "task";
         t.innerHTML = `
@@ -75,22 +96,24 @@ function render() {
           <div class="task-header">${task.title}</div>
           <div class="task-info">Équipe: ${task.team || "-"}</div>
           <div class="task-info"><span class="badge badge-${(task.priority||"Moyenne").toLowerCase()}">${task.priority||"Moyenne"}</span></div>
-          <div class="task-dates">${task.start ? "Début: " + task.start : ""} ${task.end ? " | Fin: " + task.end : ""}</div>
+          <div class="task-dates">${task.start ? "Début: "+task.start : ""} ${task.end ? " | Fin: "+task.end : ""}</div>
         `;
-        t.querySelector(".delete-task").addEventListener("click", e => {
+        t.querySelector(".delete-task").addEventListener("click", e=>{
           e.stopPropagation();
-          if(confirm("Supprimer ce projet ?")) { theme[status].splice(i,1); saveData(); }
+          if(confirm("Supprimer ce projet ?")) {
+            deleteProject(task);
+          }
         });
-        t.addEventListener("click", () => openModal(tIndex, status, i));
+        t.addEventListener("click", ()=>openModal(task));
         colEl.appendChild(t);
       });
 
       const addBtn = document.createElement("button");
       addBtn.className="ghost";
       addBtn.textContent="+ PROJET";
-      addBtn.addEventListener("click", () => {
-        theme[status].push({ title:"Nouveau projet", start:"", end:"", team:"", priority:"Moyenne" });
-        saveData();
+      addBtn.addEventListener("click", async ()=>{
+        const newProject = { title:"NOUVEAU PROJET", start:"", end:"", team:"", priority:"Moyenne", status };
+        await saveProject(newProject);
       });
       colEl.appendChild(addBtn);
 
@@ -102,37 +125,40 @@ function render() {
   });
 }
 
-function openModal(themeIdx, status, taskIdx) {
-  currentEdit = { themeIdx, status, taskIdx };
-  const task = board[themeIdx][status][taskIdx];
-  mTitle.value = task.title;
-  mStart.value = task.start;
-  mEnd.value = task.end;
-  mTeam.value = task.team;
-  mPriority.value = task.priority;
+// --- MODAL ---
+function openModal(task) {
+  currentEdit = task;
+  mTitle.value = task.title || "";
+  mStart.value = task.start || "";
+  mEnd.value = task.end || "";
+  mTeam.value = task.team || "";
+  mPriority.value = task.priority || "Moyenne";
   modal.style.display = "flex";
 }
-function closeModal() { modal.style.display="none"; currentEdit=null; }
 
-document.getElementById("modalSave").addEventListener("click", () => {
+function closeModal() {
+  modal.style.display = "none";
+  currentEdit = null;
+}
+
+document.getElementById("modalSave").addEventListener("click", async ()=>{
   if(!currentEdit) return closeModal();
-  const {themeIdx,status,taskIdx}=currentEdit;
-  const task=board[themeIdx][status][taskIdx];
-  task.title=mTitle.value;
-  task.start=mStart.value;
-  task.end=mEnd.value;
-  task.team=mTeam.value;
-  task.priority=mPriority.value;
-  saveData();
+  currentEdit.title = mTitle.value;
+  currentEdit.start = mStart.value;
+  currentEdit.end = mEnd.value;
+  currentEdit.team = mTeam.value;
+  currentEdit.priority = mPriority.value;
+  await saveProject(currentEdit);
   closeModal();
 });
 document.getElementById("modalCancel").addEventListener("click", closeModal);
 modal.addEventListener("click", e=>{if(e.target===modal) closeModal();});
 
-document.getElementById("addThemeBtn").addEventListener("click", () => {
-  board.push({ title:"NOUVEAU TYPE DE PROJET", "À FAIRE":[], "EN COURS":[], "TERMINÉ":[] });
-  saveData();
+// --- ADD TYPE DE PROJET ---
+addThemeBtn.addEventListener("click", async ()=>{
+  const newTheme = { title:"NOUVEAU TYPE DE PROJET", "À FAIRE":[], "EN COURS":[], "TERMINÉ":[] };
+  await saveProject(newTheme);
 });
 
-// Démarrage
+// --- START ---
 loadData();
