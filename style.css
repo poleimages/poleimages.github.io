@@ -59,4 +59,6 @@ button:disabled { opacity:0.5; cursor:not-allowed; }
 .read-only .delete-task { display: none; }
 .read-only .theme-title { cursor: default; }
 .read-only .task { cursor: default; }
-.read-only .checklist-on-card input[type="checkbox"] { pointer-events: none; }
+.read-only .checklist-on-card input[type="checkbox"] { pointer-events: none; opacity: 0.7; }
+.read-only .task[draggable="true"] { cursor: default; }
+.read-only button.ghost { opacity: 0.5; }

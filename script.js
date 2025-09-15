@@ -361,4 +361,5 @@ document.getElementById("modalCancel").addEventListener("click", ()=>modal.style
 modal.addEventListener("click", e=>{if(e.target===modal) modal.style.display="none";});
 
 // Initial load
+document.body.classList.add("read-only"); // Commencer en mode lecture seule
 loadBoard();
