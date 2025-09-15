@@ -7,40 +7,28 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="auth-container">
-    <div id="authStatus" class="auth-status logged-out">Mode lecture seule</div>
-    <button id="loginBtn">SE CONNECTER</button>
-    <button id="logoutBtn" style="display:none;">SE DÉCONNECTER</button>
-  </div>
-
   <h1>PLAN DE PRODUCTION - IMAGES</h1>
 
   <div id="board" class="board"></div>
   <div style="margin-top:12px;">
-    <button id="addThemeBtn" disabled>+ TYPE DE PROJET</button>
+    <button id="addThemeBtn">+ TYPE DE PROJET</button>
   </div>
 
-  <!-- Login Modal -->
-  <div id="loginModal" aria-hidden="true">
-    <div class="login-content" role="dialog" aria-modal="true">
-      <h3>CONNEXION REQUISE</h3>
+  <!-- Modal utilisateur -->
+  <div id="userModal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true">
+      <h3>IDENTIFIEZ-VOUS</h3>
       <div class="field">
-        <label>Email</label>
-        <input id="loginEmail" type="email" placeholder="votre.email@exemple.com" />
+        <label>Votre nom</label>
+        <input id="userName" type="text" placeholder="Entrez votre nom" />
       </div>
-      <div class="field">
-        <label>Mot de passe</label>
-        <input id="loginPassword" type="password" placeholder="••••••••" />
-      </div>
-      <div class="error-message" id="loginError"></div>
       <div class="modal-actions">
-        <button id="loginCancel" class="ghost">ANNULER</button>
-        <button id="loginSubmit">SE CONNECTER</button>
+        <button id="userModalSave">CONFIRMER</button>
       </div>
     </div>
   </div>
 
-  <!-- Edit Modal -->
+  <!-- Modal -->
   <div id="modal" aria-hidden="true">
     <div class="modal-content" role="dialog" aria-modal="true">
       <h3>ÉDITER PROJET</h3>
