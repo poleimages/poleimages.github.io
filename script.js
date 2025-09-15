@@ -132,8 +132,19 @@ async function loadBoard(){
 
     themeEl.appendChild(cols);
     boardEl.appendChild(themeEl);
+
+taskEl.innerHTML = `
+  <span class="delete-task">✖</span>
+  <div class="task-header">${task.title}</div>
+  <div class="task-info">Équipe: ${task.team || "-"}</div>
+  <div class="task-info"><span class="badge badge-${task.priority.toLowerCase()}">${task.priority}</span></div>
+  <div class="task-dates">${task.start ? "Début: "+task.start : ""} ${task.end ? " | Fin: "+task.end : ""}</div>
+  <div class="checklist-summary">${task.checklist.length} À FAIRE</div>
+`;
+
   });
 }
+
 
 function openModal(themeId,status,index){
   currentEdit={themeId,status,index};
