@@ -30,3 +30,10 @@ button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
 .field label { display:block; margin-bottom:6px; font-size:14px; color:#ddd; }
 .field input, .field select { width:100%; padding:8px; border-radius:8px; border:1px solid #555; background:#1e1e2f; color:white; box-sizing:border-box; }
 .modal-actions { text-align:right; margin-top:8px; display:flex; gap:8px; justify-content:flex-end; }
+
+.checklist-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.checklist-item input[type="checkbox"] { width:16px; height:16px; }
+.checklist-item input[type="text"] {
+  flex:1; background:#1e1e2f; border:1px solid #555; border-radius:6px; color:white; padding:4px 6px; font-size:13px;
+}
+.delete-check { cursor:pointer; color:#ef4444; font-weight:bold; }

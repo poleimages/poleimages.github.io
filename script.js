@@ -164,6 +164,52 @@ document.getElementById("modalSave").addEventListener("click", async ()=>{
   loadBoard();
 });
 
+// Afficher checklist
+checklistContainer.innerHTML = "";
+if(task.checklist) {
+  task.checklist.forEach((item,i)=>{
+    const div = document.createElement("div");
+    div.className="checklist-item";
+    div.innerHTML = `
+      <input type="checkbox" ${item.done?'checked':''}>
+      <input type="text" value="${item.text}">
+      <span class="delete-check">✖</span>
+    `;
+    div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
+    checklistContainer.appendChild(div);
+  });
+}
+
+addChecklistBtn.addEventListener("click", ()=>{
+  const div = document.createElement("div");
+  div.className="checklist-item";
+  div.innerHTML = `
+    <input type="checkbox">
+    <input type="text" value="">
+    <span class="delete-check">✖</span>
+  `;
+  div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
+  checklistContainer.appendChild(div);
+});
+
+const newChecklist = [];
+checklistContainer.querySelectorAll(".checklist-item").forEach(div=>{
+  newChecklist.push({
+    done: div.querySelector('input[type="checkbox"]').checked,
+    text: div.querySelector('input[type="text"]').value
+  });
+});
+updated[status][index] = {
+  title: mTitle.value,
+  start: mStart.value,
+  end: mEnd.value,
+  team: mTeam.value,
+  priority: mPriority.value,
+  checklist: newChecklist
+};
+
+
+
 document.getElementById("modalCancel").addEventListener("click", closeModal);
 modal.addEventListener("click", e=>{if(e.target===modal) closeModal();});
 function closeModal(){ modal.style.display="none"; currentEdit=null; }
