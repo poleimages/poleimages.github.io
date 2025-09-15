@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -12,7 +13,9 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
+// Elements
 const boardEl = document.getElementById("board");
 const addThemeBtn = document.getElementById("addThemeBtn");
 const modal = document.getElementById("modal");
@@ -24,8 +27,41 @@ const mPriority = document.getElementById("m-priority");
 const checklistContainer = document.getElementById("checklist-container");
 const addChecklistBtn = document.getElementById("addChecklistBtn");
 
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const userInfo = document.getElementById("userInfo");
+const boardContainer = document.getElementById("boardContainer");
+
 let currentEdit = null;
 let dragData = null;
+
+// Auth
+loginBtn.addEventListener("click", async ()=>{
+  try{
+    await signInWithEmailAndPassword(auth,emailInput.value,passwordInput.value);
+  } catch(e){ alert("Erreur login: "+e.message); }
+});
+
+logoutBtn.addEventListener("click", async ()=>{
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    userInfo.textContent = "Connecté: "+user.email;
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+    boardContainer.style.display="block";
+    loadBoard();
+  } else {
+    userInfo.textContent = "";
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+    boardContainer.style.display="none";
+  }
+});
 
 // Ajouter thème
 addThemeBtn.addEventListener("click", async ()=>{
@@ -38,29 +74,19 @@ addThemeBtn.addEventListener("click", async ()=>{
   loadBoard();
 });
 
-// Ajouter item checklist dans modal
-addChecklistBtn.addEventListener("click", ()=>{
-  const div = document.createElement("div");
-  div.className="checklist-item";
-  div.innerHTML = `<input type="checkbox"><input type="text" value=""><span class="delete-check">✖</span>`;
-  div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
-  checklistContainer.appendChild(div);
-});
-
-// Charger board
+// Load board
 async function loadBoard(){
   boardEl.innerHTML="";
   const snapshot = await getDocs(collection(db,"kanban"));
   snapshot.forEach(docSnap=>{
     const theme = docSnap.data();
     const themeId = docSnap.id;
-
     const themeEl = document.createElement("div");
     themeEl.className="theme";
 
     const titleEl = document.createElement("div");
     titleEl.className="theme-title";
-    titleEl.textContent=theme.title.toUpperCase();
+    titleEl.textContent = theme.title.toUpperCase();
     titleEl.addEventListener("click", async ()=>{
       const newTitle = prompt("Nouveau nom du type de projet :", theme.title);
       if(newTitle){
@@ -84,9 +110,9 @@ async function loadBoard(){
       colEl.addEventListener("dragover", e=>e.preventDefault());
       colEl.addEventListener("drop", async e=>{
         if(!dragData) return;
-        const {themeId: srcThemeId, status: srcStatus, index} = dragData;
+        const {themeId: srcThemeId,status: srcStatus,index} = dragData;
         if(srcThemeId!==themeId) return;
-        const updated = {...theme};
+        const updated={...theme};
         const [movedTask] = updated[srcStatus].splice(index,1);
         updated[status].push(movedTask);
         await updateDoc(doc(db,"kanban",themeId), updated);
@@ -94,38 +120,26 @@ async function loadBoard(){
         loadBoard();
       });
 
-      (theme[status] || []).forEach((task,i)=>{
+      (theme[status]||[]).forEach((task,i)=>{
         if(!task.checklist) task.checklist=[];
         const t = document.createElement("div");
         t.className="task";
         t.setAttribute("draggable","true");
+
+        let checklistHtml="";
+        task.checklist.forEach(c=>{
+          checklistHtml+=`<div class="checklist-line"><input type="checkbox" ${c.done?"checked":""} disabled> <span>${c.text}</span></div>`;
+        });
+
         t.innerHTML=`
           <span class="delete-task" title="Supprimer tâche">✖</span>
           <div class="task-header">${task.title.toUpperCase()}</div>
           <div class="task-info">Équipe: ${task.team || "-"}</div>
           <div class="task-info"><span class="badge badge-${(task.priority||"MOYENNE").toLowerCase()}">${task.priority||"MOYENNE"}</span></div>
           <div class="task-dates">${task.start?"Début: "+task.start:""} ${task.end?"| Fin: "+task.end:""}</div>
+          <div>${checklistHtml}</div>
+          <div class="task-info">Dernière modif: ${task.lastModified?.email || "-"}</div>
         `;
-
-        // Checklist affichée sur carte
-        const checklistDiv = document.createElement("div");
-        checklistDiv.className="checklist-on-card";
-        task.checklist.forEach((item, idx)=>{
-          const label = document.createElement("label");
-          const checkbox = document.createElement("input");
-          checkbox.type="checkbox";
-          checkbox.checked = item.done;
-          checkbox.addEventListener("change", async ()=>{
-            const updated = {...theme};
-            updated[status][i].checklist[idx].done = checkbox.checked;
-            await updateDoc(doc(db,"kanban",themeId), updated);
-          });
-          const span = document.createTextNode(item.text);
-          label.appendChild(checkbox);
-          label.appendChild(span);
-          checklistDiv.appendChild(label);
-        });
-        t.appendChild(checklistDiv);
 
         t.querySelector(".delete-task").addEventListener("click", async e=>{
           e.stopPropagation();
@@ -140,13 +154,15 @@ async function loadBoard(){
         t.addEventListener("click", ()=>openModal(themeId,status,i));
 
         t.addEventListener("dragstart", ()=>{
-          dragData={themeId,status,index:i};
+          dragData={themeId,status,index};
+          t.classList.add("dragging");
         });
+        t.addEventListener("dragend", ()=>t.classList.remove("dragging"));
 
         colEl.appendChild(t);
       });
 
-      const addBtn = document.createElement("button");
+      const addBtn=document.createElement("button");
       addBtn.className="ghost";
       addBtn.textContent="+ PROJET";
       addBtn.addEventListener("click", async ()=>{
@@ -165,13 +181,14 @@ async function loadBoard(){
   });
 }
 
-// Modal édition
+// Modal
 function openModal(themeId,status,index){
   currentEdit={themeId,status,index};
-  (async ()=>{
-    const docSnap = await getDocs(collection(db,"kanban"));
-    const themeData = docSnap.docs.find(d=>d.id===themeId).data();
+  (async()=>{
+    const snapshot = await getDocs(collection(db,"kanban"));
+    const themeData = snapshot.docs.find(d=>d.id===themeId).data();
     const task = themeData[status][index];
+
     mTitle.value=task.title;
     mStart.value=task.start;
     mEnd.value=task.end;
@@ -180,9 +197,9 @@ function openModal(themeId,status,index){
 
     checklistContainer.innerHTML="";
     task.checklist.forEach(item=>{
-      const div = document.createElement("div");
-      div.className="checklist-item";
-      div.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><input type="text" value="${item.text}"><span class="delete-check">✖</span>`;
+      const div=document.createElement("div");
+      div.className="checklist-line";
+      div.innerHTML=`<input type="checkbox" ${item.done?"checked":""}><input type="text" value="${item.text}"><span class="delete-check">✖</span>`;
       div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
       checklistContainer.appendChild(div);
     });
@@ -191,29 +208,38 @@ function openModal(themeId,status,index){
   })();
 }
 
+addChecklistBtn.addEventListener("click", ()=>{
+  const div=document.createElement("div");
+  div.className="checklist-line";
+  div.innerHTML=`<input type="checkbox"><input type="text" value=""><span class="delete-check">✖</span>`;
+  div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
+  checklistContainer.appendChild(div);
+});
+
 document.getElementById("modalSave").addEventListener("click", async ()=>{
   if(!currentEdit) return;
   const {themeId,status,index} = currentEdit;
-  const docSnap = await getDocs(collection(db,"kanban"));
-  const themeData = docSnap.docs.find(d=>d.id===themeId).data();
+  const snapshot = await getDocs(collection(db,"kanban"));
+  const themeData = snapshot.docs.find(d=>d.id===themeId).data();
   const task = themeData[status][index];
 
-  const newChecklist = [];
-  checklistContainer.querySelectorAll(".checklist-item").forEach(div=>{
+  const newChecklist=[];
+  checklistContainer.querySelectorAll(".checklist-line").forEach(div=>{
     newChecklist.push({
       done: div.querySelector('input[type="checkbox"]').checked,
       text: div.querySelector('input[type="text"]').value
     });
   });
 
-  const updated = {...themeData};
+  const updated={...themeData};
   updated[status][index]={...task,
     title:mTitle.value,
     start:mStart.value,
     end:mEnd.value,
     team:mTeam.value,
     priority:mPriority.value,
-    checklist:newChecklist
+    checklist:newChecklist,
+    lastModified:{uid:auth.currentUser.uid,email:auth.currentUser.email,timestamp:new Date()}
   };
 
   await updateDoc(doc(db,"kanban",themeId), updated);
@@ -223,5 +249,3 @@ document.getElementById("modalSave").addEventListener("click", async ()=>{
 
 document.getElementById("modalCancel").addEventListener("click", ()=>modal.style.display="none");
 modal.addEventListener("click", e=>{if(e.target===modal) modal.style.display="none";});
-
-loadBoard();
