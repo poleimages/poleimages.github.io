@@ -164,15 +164,15 @@ function openModal(themeId,status,index){
   })();
 }
 
-addChecklistBtn.addEventListener("click", ()=>{
+addChecklistBtn.addEventListener("click", () => {
   const div = document.createElement("div");
-  div.className="checklist-item";
-  div.innerHTML=`
+  div.className = "checklist-item";
+  div.innerHTML = `
     <input type="checkbox">
     <input type="text" value="">
     <span class="delete-check">✖</span>
   `;
-  div.querySelector(".delete-check").addEventListener("click", ()=>div.remove());
+  div.querySelector(".delete-check").addEventListener("click", () => div.remove());
   checklistContainer.appendChild(div);
 });
 
