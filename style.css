@@ -24,16 +24,14 @@ button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
 
 .delete-task { position:absolute; top:8px; right:8px; font-size:14px; color:#ef4444; cursor:pointer; user-select:none; }
 
+.checklist-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+.checklist-item input[type="checkbox"] { width:16px; height:16px; }
+.checklist-item input[type="text"] { flex:1; background:#1e1e2f; border:1px solid #555; border-radius:6px; color:white; padding:4px 6px; font-size:13px; }
+.delete-check { cursor:pointer; color:#ef4444; font-weight:bold; }
+
 #modal { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:1000; }
 .modal-content { background:#2c2c40; padding:18px; border-radius:12px; min-width:320px; max-width:480px; }
 .field { margin-bottom:10px; }
 .field label { display:block; margin-bottom:6px; font-size:14px; color:#ddd; }
 .field input, .field select { width:100%; padding:8px; border-radius:8px; border:1px solid #555; background:#1e1e2f; color:white; box-sizing:border-box; }
 .modal-actions { text-align:right; margin-top:8px; display:flex; gap:8px; justify-content:flex-end; }
-
-.checklist-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
-.checklist-item input[type="checkbox"] { width:16px; height:16px; }
-.checklist-item input[type="text"] {
-  flex:1; background:#1e1e2f; border:1px solid #555; border-radius:6px; color:white; padding:4px 6px; font-size:13px;
-}
-.delete-check { cursor:pointer; color:#ef4444; font-weight:bold; }
