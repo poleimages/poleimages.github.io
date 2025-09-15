@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kanban Firebase</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PLAN DE PRODUCTION - IMAGES</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>PLAN DE PRODUCTION - IMAGES</h1>
@@ -14,14 +14,14 @@
     <button id="addThemeBtn">+ TYPE DE PROJET</button>
   </div>
 
-  <!-- Modal édition projet -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h3 id="modalTitle">Éditer projet</h3>
+  <!-- Modal -->
+  <div id="modal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true">
+      <h3>ÉDITER PROJET</h3>
       <div class="field"><label>Titre</label><input id="m-title" type="text" /></div>
       <div class="field"><label>Date début</label><input id="m-start" type="date" /></div>
       <div class="field"><label>Date fin</label><input id="m-end" type="date" /></div>
-      <div class="field"><label>Personne(s)</label><input id="m-team" type="text" /></div>
+      <div class="field"><label>Équipe</label><input id="m-team" type="text" /></div>
       <div class="field"><label>Priorité</label>
         <select id="m-priority">
           <option>Haute</option>
@@ -29,30 +29,18 @@
           <option>Basse</option>
         </select>
       </div>
-      <h4>Checklist</h4>
-      <div id="checklist-container"></div>
-      <button id="addChecklistBtn">+ À faire</button>
-
+      <div class="field">
+        <label>Checklist</label>
+        <div id="checklist-container"></div>
+        <button id="addChecklistBtn" class="ghost">+ À FAIRE</button>
+      </div>
       <div class="modal-actions">
-        <button id="modalCancel" class="ghost">Annuler</button>
-        <button id="modalSave">Enregistrer</button>
+        <button id="modalCancel" class="ghost">ANNULER</button>
+        <button id="modalSave">ENREGISTRER</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal login -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <h3>Connexion</h3>
-      <div class="field"><label>Email</label><input id="login-email" type="email" /></div>
-      <div class="field"><label>Mot de passe</label><input id="login-password" type="password" /></div>
-      <div class="modal-actions">
-        <button id="loginCancel" class="ghost">Annuler</button>
-        <button id="loginSubmit">Se connecter</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
