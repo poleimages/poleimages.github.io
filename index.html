@@ -5,48 +5,43 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>PLAN DE PRODUCTION - IMAGES</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- Firebase SDK -->
+<script type="module" src="script.js"></script>
 </head>
 <body>
   <h1>PLAN DE PRODUCTION - IMAGES</h1>
 
-<!-- Login simple (utilisateur ajouté manuellement) -->
-  <div id="login-container">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button id="loginBtn">Connexion</button>
-    <button id="logoutBtn">Déconnexion</button>
-  </div>
-
-  <div id="board"></div>
+<div id="board" class="board"></div>
+<div style="margin-top:12px;">
   <button id="addThemeBtn">+ TYPE DE PROJET</button>
+</div>
 
-  <!-- Modal pour éditer les tâches -->
-  <div id="modal">
-    <div class="modal-content">
-      <h3>ÉDITER PROJET</h3>
-      <div class="field"><label>Titre</label><input id="m-title" type="text"></div>
-      <div class="field"><label>Date début</label><input id="m-start" type="date"></div>
-      <div class="field"><label>Date fin</label><input id="m-end" type="date"></div>
-      <div class="field"><label>Équipe</label><input id="m-team" type="text"></div>
-      <div class="field"><label>Priorité</label>
-        <select id="m-priority">
-          <option>HAUTE</option>
-          <option>MOYENNE</option>
-          <option>BASSE</option>
-        </select>
-      </div>
-
-      <h4>Checklist</h4>
+<!-- Modal -->
+<div id="modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true">
+    <h3 id="modalTitle">Éditer projet</h3>
+    <div class="field"><label>Titre</label><input id="m-title" type="text" /></div>
+    <div class="field"><label>Date début</label><input id="m-start" type="date" /></div>
+    <div class="field"><label>Date fin</label><input id="m-end" type="date" /></div>
+    <div class="field"><label>Équipe</label><input id="m-team" type="text" /></div>
+    <div class="field"><label>Priorité</label>
+      <select id="m-priority">
+        <option>Haute</option>
+        <option>Moyenne</option>
+        <option>Basse</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Checklist</label>
       <div id="checklist-container"></div>
       <button id="addChecklistBtn">+ À FAIRE</button>
-
-      <div class="modal-actions">
-        <button id="modalCancel">Annuler</button>
-        <button id="modalSave">Enregistrer</button>
-      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="modalCancel" class="ghost">Annuler</button>
+      <button id="modalSave">Enregistrer</button>
     </div>
   </div>
-
-  <script type="module" src="script.js"></script>
+</div>
 </body>
 </html>
