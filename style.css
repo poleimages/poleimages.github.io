@@ -1,18 +1,21 @@
 body { background:#1e1e2f; color:white; font-family:system-ui, sans-serif; margin:0; padding:20px; }
 h1 { margin-bottom:20px; text-transform: uppercase; }
+
 .board { display:flex; flex-direction:column; gap:30px; }
+
 .theme-title { font-size:18px; font-weight:bold; margin-bottom:10px; cursor:pointer; text-transform: uppercase; }
 .theme-columns { display:flex; gap:20px; }
+
 .column { flex:1; min-height:150px; border-radius:10px; padding:10px; }
 .column-a-faire { background:#a84848; color:white; }
 .column-en-cours { background:#a17a40; color:white; }
 .column-termine { background:#317548; color:white; }
-.column h2 { text-align:center; font-size:16px; margin:0 0 10px; text-transform: uppercase; }
+.column h2 { text-align:center; font-size:16px; margin-bottom:10px; text-transform: uppercase; }
 
 button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
 button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
 
-.task { padding:12px; border-radius:10px; margin-bottom:10px; background:#2c2c40; box-shadow:0 2px 6px rgba(0,0,0,0.4); transition: transform .12s; position: relative; }
+.task { padding:12px; border-radius:10px; margin-bottom:10px; background:#2c2c40; box-shadow:0 2px 6px rgba(0,0,0,0.4); position: relative; transition: transform .12s; }
 .task:hover { transform: translateY(-2px); }
 .task-header { font-weight:600; font-size:14px; margin-bottom:6px; text-transform: uppercase; }
 .task-info { font-size:12px; color:#ccc; margin-bottom:6px; }
@@ -21,11 +24,12 @@ button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
 .badge-moyenne { background:#facc15; color:black; }
 .badge-basse { background:#22c55e; color:black; }
 .task-dates { font-size:11px; color:#aaa; margin-top:4px; }
-.delete-task { position:absolute; top:8px; right:8px; font-size:14px; color:#ef4444; cursor:pointer; user-select:none; }
 
-.checklist-container { margin-top:10px; }
-.checklist-item { display:flex; flex-direction:row; align-items:center; gap:8px; margin-bottom:6px; }
-.checklist-item input[type="text"] { flex:1; padding:4px 6px; border-radius:6px; border:1px solid #555; background:#1e1e2f; color:white; }
+.delete-task { position:absolute; top:8px; right:8px; font-size:14px; color:#ef4444; cursor:pointer; user-select:none; }
+.checklist-item { display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap: wrap; }
+.checklist-item input[type="checkbox"] { width:16px; height:16px; }
+.checklist-item input[type="text"] { flex:1; background:#1e1e2f; border:1px solid #555; border-radius:6px; color:white; padding:6px 8px; font-size:13px; }
+.delete-check { color:#ef4444; font-size:13px; cursor:pointer; }
 
 #modal { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:1000; }
 .modal-content { background:#2c2c40; padding:18px; border-radius:12px; min-width:320px; max-width:480px; }
