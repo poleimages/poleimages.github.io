@@ -36,40 +36,72 @@
     </div>
   </div>
 
-  <script type="module">
+<script type="module">
+  // Import Firebase depuis le CDN
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { 
+    getFirestore, 
+    collection, 
+    getDocs, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    doc 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // Import the functions you need from the SDKs you need
-
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-
-  // TODO: Add SDKs for Firebase products that you want to use
-
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-
-  // Your web app's Firebase configuration
-
+  // ✅ Config Firebase (la tienne)
   const firebaseConfig = {
-
     apiKey: "AIzaSyAaYmCxLn0aWSAWfww9fnJRvUGM9rt55vE",
-
     authDomain: "poleimages-8af23.firebaseapp.com",
-
     projectId: "poleimages-8af23",
-
     storageBucket: "poleimages-8af23.firebasestorage.app",
-
     messagingSenderId: "816254286601",
-
     appId: "1:816254286601:web:ee4e4e8238382fd3e5b1d8"
-
   };
 
-
-  // Initialize Firebase
-
+  // 🔥 Initialisation Firebase
   const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
+  // --- Exemple basique ---
+  // Ajouter un projet
+  async function addProjet() {
+    const ref = await addDoc(collection(db, "kanban"), {
+      title: "Nouveau projet",
+      status: "À faire",
+      team: "",
+      priority: "Moyenne",
+      start: "",
+      end: ""
+    });
+    console.log("Projet ajouté avec ID :", ref.id);
+  }
+
+  // Lire tous les projets
+  async function getProjets() {
+    const snap = await getDocs(collection(db, "kanban"));
+    snap.forEach(doc => {
+      console.log(doc.id, "=>", doc.data());
+    });
+  }
+
+  // Modifier un projet
+  async function updateProjet(id) {
+    const ref = doc(db, "kanban", id);
+    await updateDoc(ref, { status: "En cours" });
+    console.log("Projet mis à jour :", id);
+  }
+
+  // Supprimer un projet
+  async function deleteProjet(id) {
+    const ref = doc(db, "kanban", id);
+    await deleteDoc(ref);
+    console.log("Projet supprimé :", id);
+  }
+
+  // 🚀 Tests
+  await addProjet();
+  await getProjets();
 </script>
 
   <!-- Firebase SDK -->
