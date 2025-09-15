@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PLAN DE PRODUCTION - IMAGES</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>PLAN DE PRODUCTION - IMAGES</h1>
+<div id="board" class="board"></div>
+<div style="margin-top:12px;"><button id="addThemeBtn" onclick="addTheme()">+ TYPE DE PROJET</button></div>
+<!-- Modal -->
+<div id="modal">
+<div class="modal-content">
+<h3 id="modalTitle">ÉDITER PROJET</h3>
+<div class="field"><label>Titre</label><input id="m-title" type="text"></div>
+<div class="field"><label>Date début</label><input id="m-start" type="date"></div>
+<div class="field"><label>Date fin</label><input id="m-end" type="date"></div>
+<div class="field"><label>Personne(s) sur le projet</label><input id="m-team" type="text"></div>
+<div class="field"><label>Priorité</label><select id="m-priority"><option>Haute</option><option>Moyenne</option><option>Basse</option></select></div>
+<div class="modal-actions">
+<button id="modalCancel" class="ghost">Annuler</button>
+<button id="modalSave">Enregistrer</button>
+</div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
