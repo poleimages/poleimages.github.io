@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Firebase</title>
+<title>Kanban Firebase Drag & Drop</title>
 <style>
 body { background:#1e1e2f; color:white; font-family:system-ui, sans-serif; margin:0; padding:20px; }
-h1 { margin-bottom:20px; }
+h1 { margin-bottom:20px; text-transform: uppercase; }
 .board { display:flex; flex-direction:column; gap:30px; }
 .theme-title { font-size:18px; font-weight:bold; margin-bottom:10px; cursor:pointer; text-transform: uppercase; }
 .theme-columns { display:flex; gap:20px; }
@@ -17,8 +17,8 @@ h1 { margin-bottom:20px; }
 .column h2 { text-align:center; font-size:16px; margin:0 0 10px; text-transform: uppercase; }
 button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
 button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
-.task { padding:12px; border-radius:10px; margin-bottom:10px; background:#2c2c40; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: transform .12s; position: relative; cursor:pointer; }
-.task:hover { transform: translateY(-2px); }
+.task { padding:12px; border-radius:10px; margin-bottom:10px; background:#2c2c40; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: transform .12s; position: relative; cursor: grab; }
+.task.dragging { opacity:0.5; }
 .task-header { font-weight:600; font-size:14px; margin-bottom:6px; text-transform: uppercase; }
 .task-info { font-size:12px; color:#ccc; margin-bottom:6px; }
 .badge { display:inline-block; padding:2px 6px; border-radius:5px; font-size:11px; font-weight:700; margin-right:6px; color:black; text-transform: uppercase; }
@@ -64,7 +64,7 @@ button.ghost { background:#2c2c40; border:1px solid #555; color:#bbb; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } 
+import { getFirestore, collection, getDocs, addDoc, updateDoc, doc } 
 from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // Config Firebase
@@ -134,10 +134,33 @@ async function loadBoard() {
       else colEl.classList.add("column-termine");
 
       colEl.innerHTML = `<h2>${status.toUpperCase()}</h2>`;
+      colEl.addEventListener("dragover", e => e.preventDefault());
+      colEl.addEventListener("drop", async e => {
+        const taskData = JSON.parse(e.dataTransfer.getData("text/plain"));
+        if(taskData.themeId !== themeId || taskData.status !== status){
+          const snapshot = await getDocs(collection(db,"kanban"));
+          snapshot.forEach(async docSnap=>{
+            if(docSnap.id===taskData.themeId){
+              const updated = {...docSnap.data()};
+              const [moved] = updated[taskData.status].splice(taskData.index,1);
+              updateDoc(doc(db,"kanban",taskData.themeId), updated);
+              snapshot.forEach(async docSnap2=>{
+                if(docSnap2.id===themeId){
+                  const updated2 = {...docSnap2.data()};
+                  updated2[status].push(moved);
+                  await updateDoc(doc(db,"kanban",themeId), updated2);
+                  loadBoard();
+                }
+              });
+            }
+          });
+        }
+      });
 
       (theme[status] || []).forEach((task,i)=>{
         const t = document.createElement("div");
         t.className = "task";
+        t.draggable = true;
         t.innerHTML = `
           <span class="delete-task" title="Supprimer tâche">✖</span>
           <div class="task-header">${task.title.toUpperCase()}</div>
@@ -145,6 +168,13 @@ async function loadBoard() {
           <div class="task-info"><span class="badge badge-${(task.priority||"Moyenne").toLowerCase()}">${task.priority||"Moyenne"}</span></div>
           <div class="task-dates">${task.start ? "Début: "+task.start:""} ${task.end?"| Fin: "+task.end:""}</div>
         `;
+
+        t.addEventListener("dragstart", e => {
+          e.dataTransfer.setData("text/plain", JSON.stringify({themeId, status, index:i}));
+          t.classList.add("dragging");
+        });
+        t.addEventListener("dragend", e => t.classList.remove("dragging"));
+
         t.querySelector(".delete-task").addEventListener("click", async e=>{
           e.stopPropagation();
           if(confirm("Supprimer ce projet ?")) {
@@ -154,6 +184,7 @@ async function loadBoard() {
             loadBoard();
           }
         });
+
         t.addEventListener("click", ()=>{
           currentEdit = { themeId, status, index:i, task };
           mTitle.value = task.title;
@@ -163,6 +194,7 @@ async function loadBoard() {
           mPriority.value = task.priority;
           modal.style.display="flex";
         });
+
         colEl.appendChild(t);
       });
 
@@ -210,7 +242,6 @@ document.getElementById("modalSave").addEventListener("click", async ()=>{
 
 document.getElementById("modalCancel").addEventListener("click", closeModal);
 modal.addEventListener("click", e=>{if(e.target===modal) closeModal();});
-
 function closeModal(){ modal.style.display="none"; currentEdit=null; }
 
 // Initial load
